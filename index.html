@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mirror Reflex · Hyper Reflex</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Josefin+Sans:wght@200;300;400;600&display=swap');
+
+  :root {
+    --cream: #fdf6f0;
+    --blush: #f5d6d0;
+    --rose: #e8a5a0;
+    --deep-rose: #c4706b;
+    --mauve: #8b5e6e;
+    --gold: #c9a96e;
+    --dark: #3a2535;
+    --white: #fefefe;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Josefin Sans', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    touch-action: manipulation;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(245,214,208,0.5) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(232,165,160,0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 10%, rgba(201,169,110,0.15) 0%, transparent 40%),
+      #fdf6f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* GRAIN OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.5;
+  }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 420px;
+    padding: 24px 20px;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── START SCREEN ─── */
+  .brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(11px, 3vw, 13px);
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: clamp(36px, 10vw, 52px);
+    line-height: 1;
+    color: var(--dark);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: clamp(9px, 2.5vw, 11px);
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 40px;
+  }
+
+  .emoji-preview {
+    font-size: 32px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 40px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .how-to {
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(196,112,107,0.2);
+    border-radius: 16px;
+    padding: 20px 24px;
+    width: 100%;
+    max-width: 320px;
+    margin-bottom: 36px;
+    backdrop-filter: blur(8px);
+  }
+
+  .how-to h3 {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  .how-to p {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--mauve);
+    line-height: 1.7;
+  }
+
+  .btn {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    padding: 18px 48px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--deep-rose), var(--mauve));
+    color: var(--white);
+    box-shadow: 0 8px 24px rgba(196,112,107,0.35), 0 2px 8px rgba(139,94,110,0.2);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.96);
+    box-shadow: 0 4px 12px rgba(196,112,107,0.3);
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.7);
+    color: var(--mauve);
+    border: 1.5px solid rgba(196,112,107,0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  .btn-secondary:active { transform: scale(0.96); }
+
+  /* ─── GAME SCREEN ─── */
+  #gameScreen {
+    height: 100vh;
+    height: 100dvh;
+    justify-content: space-between;
+    padding: 20px 16px 28px;
+    max-width: 100%;
+  }
+
+  .hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 420px;
+    padding: 0 4px;
+  }
+
+  .hud-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hud-label {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 2px;
+  }
+
+  .hud-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: var(--dark);
+    line-height: 1;
+  }
+
+  .streak-display {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .streak-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--blush);
+    border: 1.5px solid var(--rose);
+    transition: all 0.2s ease;
+  }
+
+  .streak-dot.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 0 6px rgba(201,169,110,0.5);
+  }
+
+  /* INSTRUCTION BOX */
+  .instruction-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .instruction-box {
+    background: rgba(255,255,255,0.75);
+    border: 1.5px solid rgba(196,112,107,0.25);
+    border-radius: 20px;
+    padding: 16px 28px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(196,112,107,0.1);
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .instruction-verb {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .instruction-target {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(22px, 6vw, 28px);
+    font-weight: 600;
+    color: var(--dark);
+    letter-spacing: 0.02em;
+  }
+
+  /* DON'T TAP MODE */
+  .instruction-box.dont-tap {
+    background: rgba(58,37,53,0.9);
+    border-color: var(--gold);
+    animation: pulse-border 0.5s ease infinite alternate;
+  }
+
+  .instruction-box.dont-tap .instruction-verb { color: var(--rose); }
+  .instruction-box.dont-tap .instruction-target { color: var(--gold); }
+
+  @keyframes pulse-border {
+    from { box-shadow: 0 4px 20px rgba(201,169,110,0.2); }
+    to { box-shadow: 0 4px 30px rgba(201,169,110,0.5); }
+  }
+
+  /* TIMER BAR */
+  .timer-wrap {
+    width: 100%;
+    max-width: 340px;
+    height: 3px;
+    background: var(--blush);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--rose), var(--deep-rose));
+    border-radius: 2px;
+    transition: width linear;
+    transform-origin: left;
+  }
+
+  /* EMOJI GRID */
+  .grid {
+    display: grid;
+    gap: 14px;
+    width: 100%;
+    max-width: 380px;
+    padding: 0 8px;
+  }
+
+  .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+  .emoji-btn {
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 20px rgba(196,112,107,0.12), 0 1px 4px rgba(139,94,110,0.08), inset 0 1px 0 rgba(255,255,255,0.9);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    position: relative;
+    overflow: hidden;
+    border: 1.5px solid rgba(245,214,208,0.8);
+  }
+
+  .emoji-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .emoji-btn:active {
+    transform: scale(0.93);
+    box-shadow: 0 2px 10px rgba(196,112,107,0.15);
+  }
+
+  .emoji-icon {
+    font-size: clamp(36px, 10vw, 52px);
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .emoji-label {
+    font-size: clamp(9px, 2.5vw, 11px);
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--mauve);
+    pointer-events: none;
+  }
+
+  .emoji-btn.flash-correct {
+    animation: correct-flash 0.3s ease forwards;
+  }
+
+  .emoji-btn.flash-wrong {
+    animation: wrong-flash 0.3s ease forwards;
+  }
+
+  @keyframes correct-flash {
+    0% { background: rgba(255,255,255,0.8); }
+    50% { background: rgba(201,169,110,0.4); box-shadow: 0 0 24px rgba(201,169,110,0.5); }
+    100% { background: rgba(255,255,255,0.8); }
+  }
+
+  @keyframes wrong-flash {
+    0% { background: rgba(255,255,255,0.8); }
+    50% { background: rgba(196,112,107,0.4); box-shadow: 0 0 24px rgba(196,112,107,0.5); }
+    100% { background: rgba(196,112,107,0.3); }
+  }
+
+  /* COMBO FLASH */
+  .combo-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(48px, 14vw, 72px);
+    font-weight: 700;
+    color: var(--gold);
+    text-shadow: 0 4px 20px rgba(201,169,110,0.5);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 50;
+    transition: none;
+  }
+
+  .combo-toast.show {
+    animation: combo-pop 0.8s ease forwards;
+  }
+
+  @keyframes combo-pop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    30% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    60% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  }
+
+  /* ─── GAME OVER ─── */
+  .go-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(38px, 11vw, 56px);
+    color: var(--dark);
+    text-align: center;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .go-sub {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 40px;
+  }
+
+  .score-card {
+    background: rgba(255,255,255,0.7);
+    border: 1.5px solid rgba(196,112,107,0.2);
+    border-radius: 24px;
+    padding: 28px 40px;
+    text-align: center;
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 36px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(196,112,107,0.1);
+  }
+
+  .score-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--dark);
+    line-height: 1;
+  }
+
+  .score-label {
+    font-size: 9px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 16px;
+  }
+
+  .score-detail {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--mauve);
+    line-height: 1.6;
+  }
+
+  .score-detail span {
+    color: var(--deep-rose);
+    font-weight: 600;
+  }
+
+  .high-score-badge {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: rgba(201,169,110,0.12);
+    border: 1px solid rgba(201,169,110,0.3);
+    border-radius: 20px;
+    padding: 6px 16px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  .high-score-badge.visible { display: inline-block; }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div id="startScreen" class="screen active">
+  <div class="title">Mirror<br>Reflex</div>
+  <div class="subtitle">Hyper Reflex Edition</div>
+  <div class="emoji-preview">💄 👁️ 💅 🧴 🌸</div>
+  <div class="how-to">
+    <h3>How to Play</h3>
+    <p>Tap the correct beauty item before time runs out. Wrong tap = Game Over. Streak 5 = +5 bonus. Watch out for DON'T TAP rounds!</p>
+  </div>
+  <button class="btn btn-primary" onclick="startGame()">Begin</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="gameScreen" class="screen">
+  <div class="hud">
+    <div class="hud-block">
+      <div class="hud-label">Score</div>
+      <div class="hud-value" id="scoreDisplay">0</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-label">Streak</div>
+      <div class="streak-display" id="streakDots"></div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-label">Round</div>
+      <div class="hud-value" id="roundDisplay">1</div>
+    </div>
+  </div>
+
+  <div class="instruction-wrap">
+    <div class="instruction-box" id="instructionBox">
+      <div class="instruction-verb" id="instructionVerb">Tap the</div>
+      <div class="instruction-target" id="instructionTarget">Lipstick</div>
+    </div>
+    <div class="timer-wrap">
+      <div class="timer-bar" id="timerBar"></div>
+    </div>
+  </div>
+
+  <div class="grid" id="emojiGrid"></div>
+</div>
+
+<!-- GAME OVER SCREEN -->
+<div id="gameOverScreen" class="screen">
+  <div class="go-title">Game<br>Over</div>
+  <div class="go-sub">Better luck next time</div>
+  <div class="score-card">
+    <div class="score-label">Final Score</div>
+    <div class="score-num" id="finalScore">0</div>
+    <div class="score-detail">
+      Reached Round <span id="finalRound">1</span><br>
+      Best Streak <span id="finalStreak">0</span>
+    </div>
+    <div class="high-score-badge" id="highScoreBadge">✦ New High Score ✦</div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goHome()">Home</button>
+    <button class="btn btn-primary" onclick="startGame()">Play Again</button>
+  </div>
+</div>
+
+<!-- COMBO TOAST -->
+<div class="combo-toast" id="comboToast">✦5 Streak✦</div>
+
+<script>
+  const ITEMS = [
+    { emoji: '💄', name: 'Lipstick' },
+    { emoji: '👁️', name: 'Mascara' },
+    { emoji: '💅', name: 'Nail Polish' },
+    { emoji: '🧴', name: 'Serum' },
+    { emoji: '🌸', name: 'Perfume' },
+  ];
+
+  let score = 0, round = 1, streak = 0, bestStreak = 0;
+  let highScore = parseInt(localStorage.getItem('mrHighScore') || '0');
+  let timerInterval = null;
+  let roundActive = false;
+  let isDontTap = false;
+  let targetItem = null;
+
+  function getTimeLimit() {
+    if (round <= 3) return 2500;
+    if (round <= 6) return 2000;
+    if (round <= 10) return 1500;
+    if (round <= 15) return 1200;
+    return 900;
+  }
+
+  function getItemCount() {
+    if (round <= 2) return 2;
+    if (round <= 4) return 3;
+    if (round <= 7) return 4;
+    if (round <= 11) return 5;
+    return 6;
+  }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function startGame() {
+    score = 0; round = 1; streak = 0; bestStreak = 0;
+    updateHUD();
+    show('gameScreen');
+    nextRound();
+  }
+
+  function goHome() {
+    clearTimer();
+    show('startScreen');
+  }
+
+  function updateHUD() {
+    document.getElementById('scoreDisplay').textContent = score;
+    document.getElementById('roundDisplay').textContent = round;
+    const dots = document.getElementById('streakDots');
+    dots.innerHTML = '';
+    for (let i = 0; i < 5; i++) {
+      const d = document.createElement('div');
+      d.className = 'streak-dot' + (i < streak ? ' active' : '');
+      dots.appendChild(d);
+    }
+  }
+
+  function clearTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  }
+
+  function nextRound() {
+    clearTimer();
+    roundActive = false;
+
+    // DON'T TAP chance: starts at round 5, ~25% chance
+    isDontTap = round >= 5 && Math.random() < 0.25;
+
+    const count = getItemCount();
+    const shuffled = shuffle(ITEMS).slice(0, count);
+
+    if (isDontTap) {
+      setupDontTap(shuffled);
+    } else {
+      // Pick random target from shown items
+      targetItem = shuffled[Math.floor(Math.random() * shuffled.length)];
+      setupNormalRound(shuffled);
+    }
+
+    renderGrid(shuffled);
+    startTimer();
+  }
+
+  function setupNormalRound(items) {
+    const box = document.getElementById('instructionBox');
+    box.classList.remove('dont-tap');
+    document.getElementById('instructionVerb').textContent = 'Tap the';
+    document.getElementById('instructionTarget').textContent = targetItem.name;
+  }
+
+  function setupDontTap(items) {
+    const box = document.getElementById('instructionBox');
+    box.classList.add('dont-tap');
+    document.getElementById('instructionVerb').textContent = '⚠️ DO NOT';
+    document.getElementById('instructionTarget').textContent = 'Tap Anything';
+    targetItem = null;
+  }
+
+  function renderGrid(items) {
+    const grid = document.getElementById('emojiGrid');
+    const cols = items.length <= 2 ? 2 : items.length <= 4 ? 2 : 3;
+    grid.className = `grid cols-${cols}`;
+    grid.innerHTML = '';
+    items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'emoji-btn';
+      btn.innerHTML = `<span class="emoji-icon">${item.emoji}</span><span class="emoji-label">${item.name}</span>`;
+      btn.addEventListener('click', () => handleTap(item, btn));
+      grid.appendChild(btn);
+    });
+  }
+
+  function startTimer() {
+    const bar = document.getElementById('timerBar');
+    const limit = getTimeLimit();
+    const start = Date.now();
+
+    bar.style.transition = 'none';
+    bar.style.width = '100%';
+
+    setTimeout(() => {
+      bar.style.transition = `width ${limit}ms linear`;
+      bar.style.width = '0%';
+    }, 30);
+
+    roundActive = true;
+
+    timerInterval = setTimeout(() => {
+      if (!roundActive) return;
+      // Time's up
+      if (isDontTap) {
+        // Survived don't-tap round!
+        roundActive = false;
+        score += 1;
+        streak = Math.min(streak + 1, 5);
+        if (streak > bestStreak) bestStreak = streak;
+        if (streak === 5) triggerCombo();
+        round++;
+        updateHUD();
+        setTimeout(nextRound, 300);
+      } else {
+        gameOver();
+      }
+    }, limit);
+  }
+
+  function handleTap(item, btn) {
+    if (!roundActive) return;
+    roundActive = false;
+    clearTimer();
+
+    if (isDontTap) {
+      // Tapped during don't tap = game over
+      btn.classList.add('flash-wrong');
+      setTimeout(gameOver, 300);
+      return;
+    }
+
+    if (item.name === targetItem.name) {
+      btn.classList.add('flash-correct');
+      score += 1;
+      streak = Math.min(streak + 1, 5);
+      if (streak > bestStreak) bestStreak = streak;
+      if (streak === 5) {
+        score += 5;
+        streak = 0;
+        triggerCombo();
+      }
+      round++;
+      updateHUD();
+      setTimeout(nextRound, 300);
+    } else {
+      btn.classList.add('flash-wrong');
+      setTimeout(gameOver, 300);
+    }
+  }
+
+  function triggerCombo() {
+    const toast = document.getElementById('comboToast');
+    toast.classList.remove('show');
+    void toast.offsetWidth;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 900);
+  }
+
+  function gameOver() {
+    clearTimer();
+    roundActive = false;
+
+    const isNew = score > highScore;
+    if (isNew) {
+      highScore = score;
+      localStorage.setItem('mrHighScore', highScore);
+    }
+
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('finalRound').textContent = round;
+    document.getElementById('finalStreak').textContent = bestStreak;
+    document.getElementById('highScoreBadge').classList.toggle('visible', isNew);
+
+    show('gameOverScreen');
+  }
+
+  // Init streak dots
+  const dotsEl = document.getElementById('streakDots');
+  for (let i = 0; i < 5; i++) {
+    const d = document.createElement('div');
+    d.className = 'streak-dot';
+    dotsEl.appendChild(d);
+  }
+</script>
+</body>
+</html>
